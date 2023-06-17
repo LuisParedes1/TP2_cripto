@@ -10,14 +10,36 @@
 # Tener en cuenta que, dado el grado de las restricciones, se requiere usar un factor de
 # expansión (blowup) por lo menos tan grande como el grado de las restricciones.
 
+from field import FieldElement
+
 import channel, field, list_utils, merkle, polynomial
 
-def main():
-    print("Hello World!")
+# 1. Considerar a_0 = 2 y a_{n+1}=a_n^8.
+def modelo1():
+    
+    # Pasos
+
+    # 1) Genero mi execution trace
+    a = [FieldElement(1), FieldElement(3141592)]
+    while len(a) < 1023:
+        a.append(a[-2] * a[-2] + a[-1] * a[-1]) # Cambiar con el modelo actual
+    
+    pass
+
+
+def modelo2():
+    pass
+
 
     
 
 
-
+## |G°| = 20 y G = {g^0,g^1, g^2,...g^20} con g = 5, g=5
+## p = 3221225472
+#  G = {g^i | 0 <= i < |G°|}
 if __name__ == "__main__":
-    main()
+
+    print("Para el siguiente modelo se tomara el espacio de cuerpo finito de grado 20 y primo 3221225472")
+    print("Tomaremos como generador g = 5")
+
+    modelo1()
