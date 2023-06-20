@@ -12,6 +12,7 @@
 
 import channel, field, list_utils, merkle, polynomial
 
+import time
 from field import FieldElement # Cuerpo Finito
 from polynomial import X # Polinomios
 from polynomial import interpolate_poly # Interpolacion de Lagrange
@@ -24,7 +25,7 @@ from FRI import FriCommit # Next domain for the FRI operator
 from decommitment import decommit_fri # proof algorithm
 
 # 1. Considerar a_0 = 2 y a_{n+1}=a_n^8.
-def modelo1():
+def modelo():
     
     # Pasos
 
@@ -48,6 +49,8 @@ def fibSq():
 
     # 1. Generate the trace
 
+    start = time.time()
+    start_all = start
     print("Generating the trace")
 
     # FibonacciSq Trace
@@ -58,9 +61,7 @@ def fibSq():
         a.append(a[-2] * a[-2] + a[-1] * a[-1])   
 
 
-    # 2. Busco un espacio finitamente generado 
-
-  
+    # 2. Busco un espacio finitamente generado   
 
     # Busco elemento generador g tal que el subgrupo sea de orden |Fx| = n
     # G = {g,g^1, g^2, ... , g^n}, G[i] = g^i
@@ -80,8 +81,6 @@ def fibSq():
 
     # 3. Busco un polinomio asociado a la traza y hago interpolacion
     # y extiendo la traza
-
-    print("Searching for the trace polinomial")
     
     # Ahora con el polinomio asociado, cada elemento de la traza 
     # lo veo como una evaluacion hecha del polinomio f sobre
@@ -142,7 +141,9 @@ def fibSq():
 
 
     # Notebook 2
-    print("Creating Composition Polynomial\n")
+    print(f'{time.time() - start}s')
+    start = time.time()
+    print("Generating the composition polynomial and the FRI layers...")
 
     # Constraints
     # Convierto todas las restricciones originales a rational functions
@@ -167,26 +168,23 @@ def fibSq():
     cp_eval = CP_eval(cp,eval_domain)
     cp_merkle = MerkleTree(cp_eval)
     channel.send(cp_merkle.root)
-
-    print("The proof so far is")
-    print(channel.proof)
     
     # Notebook 3
-    print("FRI Foldin\n")
     
     # FRI Folding Operator
     fri_polys, fri_domains, fri_layers, fri_merkles = FriCommit(cp, eval_domain, cp_eval, cp_merkle, channel)
 
     # Notebook 4
-    print("The Proof")
+    print(f'{time.time() - start}s')
+    start = time.time()
     print("Generating queries and decommitments...")
     
     decommit_fri(channel, fri_layers, fri_merkles, f_eval, f_merkle)
 
     print(channel.proof)
+    print(f'Overall time: {time.time() - start_all}s')
     print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
     
-
 
 ## |G°| = 20 y G = {g^0,g^1, g^2,...g^20} con g = 5, g=5
 ## p = 3221225472
