@@ -21,6 +21,7 @@ from channel import Channel # Implements Fiat-Shamir Heuristic
 #####
 from CP import CP_eval, get_CP # Returns a list of images from the CP
 from FRI import FriCommit # Next domain for the FRI operator
+from decommitment import decommit_fri # proof algorithm
 
 # 1. Considerar a_0 = 2 y a_{n+1}=a_n^8.
 def modelo1():
@@ -47,7 +48,7 @@ def fibSq():
 
     # 1. Generate the trace
 
-    print("Genero la execution trace")
+    print("Generating the trace")
 
     # FibonacciSq Trace
     a = [FieldElement(1), FieldElement(3141592)]
@@ -59,7 +60,7 @@ def fibSq():
 
     # 2. Busco un espacio finitamente generado 
 
-    print("Busco el polinomio asociado a la traza")
+  
 
     # Busco elemento generador g tal que el subgrupo sea de orden |Fx| = n
     # G = {g,g^1, g^2, ... , g^n}, G[i] = g^i
@@ -78,14 +79,9 @@ def fibSq():
 
 
     # 3. Busco un polinomio asociado a la traza y hago interpolacion
-    f = interpolate_poly(G[:-1], a)
+    # y extiendo la traza
 
-    # x[i] = G[i] (espacio finitamente generado)
-    # y[i] = a[i] (FibonacciSq)
-
-    # 4. Extiendo la traza
-
-    print("Extiendo el dominio del polinomio asociado. Sera 8 veces mas grande")
+    print("Searching for the trace polinomial")
     
     # Ahora con el polinomio asociado, cada elemento de la traza 
     # lo veo como una evaluacion hecha del polinomio f sobre
@@ -93,24 +89,31 @@ def fibSq():
 
     # Esto se llama Reed-Solomon error correction code
 
-    ## 4.1 Evaluamos en un dominio mucho mas grande que G. Tomamos
+    ## Evaluamos en un dominio mucho mas grande que G. Tomamos
     ## un dominio H que es 8 veces mas grande
 
     ## n = 8*1024
     ## |𝔽×| = 3221225473
     ## k = 393216
 
+    print("We blow up the trace (Extend the trace) 8 times bigger")
+    
     w = FieldElement.generator()
     h = w ** ((2 ** 30 * 3) // 8192)  # (este es mi generador g^k)
     H = [h ** i for i in range(8192)]
     eval_domain = [w * x for x in H]
 
 
-    ## 4.2 Busco un polinomio asociado y hago interpolacion
-    ## Igual que en el paso 3
+    ## 4 Busco un polinomio asociado y hago interpolacion
 
     f = interpolate_poly(G[:-1], a)  ## Este polinomio pasa por todos los 
                                     ## puntos que nos interes
+
+    # Busco un polinomio asociado a la traza 
+    # f = interpolate_poly(G[:-1], a)
+
+    # x[i] = G[i] (espacio finitamente generado)
+    # y[i] = a[i] (FibonacciSq)
                                      
     f_eval = [f(d) for d in eval_domain] ## Busco la imagen en todos los 
                                         ## elementos del dominio extendido
@@ -139,8 +142,7 @@ def fibSq():
 
 
     # Notebook 2
-
-    print("Creo el polinomio CP\n")
+    print("Creating Composition Polynomial\n")
 
     # Constraints
     # Convierto todas las restricciones originales a rational functions
@@ -166,6 +168,8 @@ def fibSq():
     cp_merkle = MerkleTree(cp_eval)
     channel.send(cp_merkle.root)
 
+    print("The proof so far is")
+    print(channel.proof)
     
     # Notebook 3
     print("FRI Foldin\n")
@@ -175,7 +179,12 @@ def fibSq():
 
     # Notebook 4
     print("The Proof")
+    print("Generating queries and decommitments...")
     
+    decommit_fri(channel, fri_layers, fri_merkles, f_eval, f_merkle)
+
+    print(channel.proof)
+    print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
     
 
 

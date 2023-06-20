@@ -6,6 +6,6 @@ def get_CP(channel,p0,p1,p2):
     return alpha0*p0 + alpha1*p1 + alpha2*p2
 
 ## Returns a list of images from the CP
-def CP_eval(CP, eval_domain):
+def CP_eval(cp, eval_domain):
     #CP = get_CP(channel,p0,p1,p2)
-    return [CP(d) for d in eval_domain]
+    return [cp(d) for d in eval_domain]
