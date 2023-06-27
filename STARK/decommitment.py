@@ -36,8 +36,8 @@ def decommit_on_query(idx, channel, fri_layers, fri_merkles, f_eval, f_merkle):
     decommit_on_fri_layers(idx, channel,fri_layers, fri_merkles)  
 
 # To finish the proof, the prover gets a set of random queries from the channel, i.e., indices between 0 to 8191, and decommits on each query.
-def decommit_fri(channel, fri_layers, fri_merkles, f_eval, f_merkle):
+def decommit_fri(channel, fri_layers, fri_merkles, f_eval, f_merkle, len_query):
     for query in range(3):
         # Get a random index from the verifier and send the corresponding decommitment.
-        decommit_on_query(channel.receive_random_int(0, 8191-16), channel, fri_layers, fri_merkles, f_eval, f_merkle)
+        decommit_on_query(channel.receive_random_int(0, len_query-16), channel, fri_layers, fri_merkles, f_eval, f_merkle)
 
