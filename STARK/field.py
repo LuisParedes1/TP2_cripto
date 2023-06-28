@@ -26,7 +26,7 @@ class FieldElement:
     """
     Represents an element of F_(3 * 2**30 + 1).
     """
-    k_modulus = 3 * 2**30 + 1
+    k_modulus = 3 * 2**30 + 1  # Cuerpo Finito F_3221225473
     generator_val = 5
 
     def __init__(self, val):
