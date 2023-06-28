@@ -184,7 +184,7 @@ def modelo_uno():
     a = [FieldElement(2)]
 
     # a_{n} = 2^{8^n}
-    while len(a) < 22:
+    while len(a) < 21:
         a.append(a[0]**(8**(len(a))))
 
     
@@ -228,17 +228,22 @@ def modelo_uno():
     numer0 = f - 2
     denom0 = X - 1
     p0 = numer0 / denom0
-
-
-    # a[n+1] = (an)^8 
-    numer1 = f(g* X) - f(X)**8
-
-    lst = [(X - g**i) for i in range(21)]
-    denom1 = prod(lst)
+    
+    # a[21] = (a)^{8^20} 
+    numer1 = f - FieldElement(2)**(8**20)
+    denom1 = X - g**20
     p1 = numer1 / denom1
 
 
-    cp = get_CP(channel,[p0,p1])
+    # a[n+1] = (an)^8 
+    numer2 = f(g* X) - f(X)**8
+
+    lst = [(X - g**i) for i in range(20)]
+    denom2 = prod(lst)
+    p2 = numer2 / denom2
+
+
+    cp = get_CP(channel,[p0,p1,p2])
     cp_eval = CP_eval(cp,eval_domain)
     cp_merkle = MerkleTree(cp_eval)
     channel.send(cp_merkle.root)
@@ -259,6 +264,7 @@ def modelo_uno():
     print(f'Overall time: {time.time() - start_all}s')
     print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
 
+
 def modelo_dos():
     
     start = time.time()
@@ -269,7 +275,7 @@ def modelo_dos():
     a = [FieldElement(2)]
 
     # a_{n} = 2^{8^n}
-    while len(a) < 60:
+    while len(a) < 61:
         a.append(a[0]**(2**(len(a))))
 
     
@@ -313,21 +319,27 @@ def modelo_dos():
     numer0 = f - 2
     denom0 = X - 1
     p0 = numer0 / denom0
-
-
-    # a[n+1] = (an)^2
-    numer1 = f(g* X) - f(X)**2
-
-    lst = [(X - g**i) for i in range(59)]
-    denom1 = prod(lst)
+    
+    # a[60] = (a)^{8^20} 
+    numer1 = f - FieldElement(2)**(2**60)
+    denom1 = X - g**60
     p1 = numer1 / denom1
 
 
-    cp = get_CP(channel,[p0,p1])
+    # a[n+1] = (an)^2
+    numer2 = f(g* X) - f(X)**2
+
+    lst = [(X - g**i) for i in range(59)]
+    denom2 = prod(lst)
+    p2 = numer2 / denom2
+
+
+    cp = get_CP(channel,[p0,p1,p2])
     cp_eval = CP_eval(cp,eval_domain)
     cp_merkle = MerkleTree(cp_eval)
     channel.send(cp_merkle.root)
 
+    
     # FRI Folding Operator
     fri_polys, fri_domains, fri_layers, fri_merkles = FriCommit(cp, eval_domain, cp_eval, cp_merkle, channel)
 
@@ -343,6 +355,7 @@ def modelo_dos():
     print(channel.proof)
     print(f'Overall time: {time.time() - start_all}s')
     print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
+
 
 def modelo_tres():
     
@@ -400,33 +413,31 @@ def modelo_tres():
     p0 = numer0 / denom0
 
     
-    ##### TODO
-
-    # 𝑎[2𝑛+1]=𝑎[2𝑛]^2
-    numer1 = f(g* X) - f(X)**2
-
-    lst = [(X - g**i) for i in range(41)]
-    denom1 = prod(lst)
+    # a[40] = (a)^{8^20} 
+    numer1 = f - FieldElement(2)**(8**20)
+    denom1 = X - g**40
     p1 = numer1 / denom1
-        
-    ##### TODO
     
-    # 𝑎[2𝑛]=𝑎[2𝑛−1]^4
-    numer2 = f(g* X) - f(X)**2  # TODO
+    # 𝑎[2𝑛+1]=𝑎[2𝑛]^2
+    numer2 = f(g* X) - f(X)**2
 
-    lst = [(X - g**i) for i in range(41)]
+    lst = [(X - g**(2*i)) for i in range(0,19)]
     denom2 = prod(lst)
-    
     p2 = numer2 / denom2
+    
+    # 𝑎[2𝑛+1]=𝑎[2𝑛]^2
+    numer3 = f(g* X) - f(X)**4
 
-    cp = get_CP(channel,[p0,p1,p2])
+    lst = [(X - g**(2*i+1)) for i in range(0,19)]
+    denom3 = prod(lst)
+    p3 = numer3 / denom3
+    
+
+    cp = get_CP(channel,[p0,p1,p2,p3])
     cp_eval = CP_eval(cp,eval_domain)
     cp_merkle = MerkleTree(cp_eval)
     channel.send(cp_merkle.root)
     
-    
-    print("El polinomio CP es")
-    display(cp)
 
     # FRI Folding Operator
     fri_polys, fri_domains, fri_layers, fri_merkles = FriCommit(cp, eval_domain, cp_eval, cp_merkle, channel)
@@ -445,14 +456,9 @@ def modelo_tres():
     print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
 
 
-    
-if __name__ == "__main__":
-    modelo_tres()
-
 
 if __name__ == "__main__":
     # fibSq()
     modelo_uno()
-    # modelo_dos()
-    # modelo_tres()
-    # modelo_cuatro()
+    modelo_dos()
+    modelo_tres()
