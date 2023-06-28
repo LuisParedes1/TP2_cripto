@@ -9,4 +9,3 @@ Una descripcion mas detallada del trabajo se encuentra [aca](https://mis-notas.n
 
 # Integrantes
 Luis Paredes - 104851
-Eli - 0000
