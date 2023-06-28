@@ -259,10 +259,200 @@ def modelo_uno():
     print(f'Overall time: {time.time() - start_all}s')
     print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
 
-## |G°| = 20 y G = {g^0,g^1, g^2,...g^20} con g = 5, g=5
-## p = 3221225472
-#  G = {g^i | 0 <= i < |G°|}
+def modelo_dos():
+    
+    start = time.time()
+    start_all = start
+    print("Generating the trace")
+
+    # Tabla de Ejecucion
+    a = [FieldElement(2)]
+
+    # a_{n} = 2^{8^n}
+    while len(a) < 60:
+        a.append(a[0]**(2**(len(a))))
+
+    
+    # Siendo n el orden del subgrupo
+    # n*k = |𝔽×| , busco k tal que |𝔽×| = 3221225473
+    n = 64
+    mod_F = FieldElement.k_modulus
+    k = mod_F // n
+
+    g = FieldElement.generator() ** (k)  # Busco g^k
+    G = [g ** i for i in range(n)] # Genero el subgrupo de orden 64
+    
+
+    print("We blow up the trace (Extend the trace) 8 times bigger")
+    
+    n = 8*64
+    mod_F = FieldElement.k_modulus
+    k = mod_F // n
+
+    w = FieldElement.generator()
+
+    h = w ** (k)  # Este es mi generador g^k para el nuevo dominio
+    H = [h ** i for i in range(n)] # Genero el subgrupo de orden 8*64
+
+    eval_domain = [w * x for x in H]
+
+    f = interpolate_poly(G[:len(a)], a)  ## Este polinomio pasa por todos los puntos que nos interes
+    f_eval = [f(d) for d in eval_domain] ## Busco la imagen en todos los elementos del dominio extendido
+
+
+    f_merkle = MerkleTree(f_eval) 
+
+    channel = Channel()     # El channel nos dara datos que deberia darnos el verifier
+    channel.send(f_merkle.root)
+
+    print(f'{time.time() - start}s')
+    start = time.time()
+    print("Generating the composition polynomial and the FRI layers...")
+
+    ## a0 = 2
+    numer0 = f - 2
+    denom0 = X - 1
+    p0 = numer0 / denom0
+
+
+    # a[n+1] = (an)^2
+    numer1 = f(g* X) - f(X)**2
+
+    lst = [(X - g**i) for i in range(59)]
+    denom1 = prod(lst)
+    p1 = numer1 / denom1
+
+
+    cp = get_CP(channel,[p0,p1])
+    cp_eval = CP_eval(cp,eval_domain)
+    cp_merkle = MerkleTree(cp_eval)
+    channel.send(cp_merkle.root)
+
+    # FRI Folding Operator
+    fri_polys, fri_domains, fri_layers, fri_merkles = FriCommit(cp, eval_domain, cp_eval, cp_merkle, channel)
+
+    print(f'{time.time() - start}s')
+    start = time.time()
+    print("Generating queries and decommitments...")
+
+    len_query = len(eval_domain) - 1
+    decommit_fri(channel, fri_layers, fri_merkles, f_eval, f_merkle, len_query)
+
+
+    # Verificamos
+    print(channel.proof)
+    print(f'Overall time: {time.time() - start_all}s')
+    print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
+
+def modelo_tres():
+    
+    start = time.time()
+    start_all = start
+    print("Generating the trace")
+
+   # Tabla de Ejecucion
+    a = [FieldElement(2)] # a0 = 2
+
+    # a_{n} = 2^{8^n}
+    while len(a) < 41:
+        a.append(a[-1]**2) # 𝑎_{2𝑛+1}=𝑎_{2𝑛}^2
+        a.append(a[-1]**4) # 𝑎_{2𝑛}=𝑎_{2𝑛−1}^4
+    
+    # Siendo n el orden del subgrupo
+    # n*k = |𝔽×| , busco k tal que |𝔽×| = 3221225473
+    n = 64
+    mod_F = FieldElement.k_modulus
+    k = mod_F // n
+
+    g = FieldElement.generator() ** (k)  # Busco g^k
+    G = [g ** i for i in range(n)] # Genero el subgrupo de orden 64
+    
+
+    print("We blow up the trace (Extend the trace) 8 times bigger")
+    
+    n = 8*64
+    mod_F = FieldElement.k_modulus
+    k = mod_F // n
+
+    w = FieldElement.generator()
+
+    h = w ** (k)  # Este es mi generador g^k para el nuevo dominio
+    H = [h ** i for i in range(n)] # Genero el subgrupo de orden 8*64
+
+    eval_domain = [w * x for x in H]
+
+    f = interpolate_poly(G[:len(a)], a)  ## Este polinomio pasa por todos los puntos que nos interes
+    f_eval = [f(d) for d in eval_domain] ## Busco la imagen en todos los elementos del dominio extendido
+
+
+    f_merkle = MerkleTree(f_eval) 
+
+    channel = Channel()     # El channel nos dara datos que deberia darnos el verifier
+    channel.send(f_merkle.root)
+
+    print(f'{time.time() - start}s')
+    start = time.time()
+    print("Generating the composition polynomial and the FRI layers...")
+
+    ## a0 = 2
+    numer0 = f - 2
+    denom0 = X - 1
+    p0 = numer0 / denom0
+
+    
+    ##### TODO
+
+    # 𝑎[2𝑛+1]=𝑎[2𝑛]^2
+    numer1 = f(g* X) - f(X)**2
+
+    lst = [(X - g**i) for i in range(41)]
+    denom1 = prod(lst)
+    p1 = numer1 / denom1
+        
+    ##### TODO
+    
+    # 𝑎[2𝑛]=𝑎[2𝑛−1]^4
+    numer2 = f(g* X) - f(X)**2  # TODO
+
+    lst = [(X - g**i) for i in range(41)]
+    denom2 = prod(lst)
+    
+    p2 = numer2 / denom2
+
+    cp = get_CP(channel,[p0,p1,p2])
+    cp_eval = CP_eval(cp,eval_domain)
+    cp_merkle = MerkleTree(cp_eval)
+    channel.send(cp_merkle.root)
+    
+    
+    print("El polinomio CP es")
+    display(cp)
+
+    # FRI Folding Operator
+    fri_polys, fri_domains, fri_layers, fri_merkles = FriCommit(cp, eval_domain, cp_eval, cp_merkle, channel)
+
+    print(f'{time.time() - start}s')
+    start = time.time()
+    print("Generating queries and decommitments...")
+
+    len_query = len(eval_domain) - 1
+    decommit_fri(channel, fri_layers, fri_merkles, f_eval, f_merkle, len_query)
+
+
+    # Verificamos
+    print(channel.proof)
+    print(f'Overall time: {time.time() - start_all}s')
+    print(f'Uncompressed proof length in characters: {len(str(channel.proof))}')
+
+
+    
+if __name__ == "__main__":
+    modelo_tres()
+
+
 if __name__ == "__main__":
     # fibSq()
-
     modelo_uno()
+    # modelo_dos()
+    # modelo_tres()
+    # modelo_cuatro()
